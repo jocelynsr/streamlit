@@ -3,13 +3,14 @@ from transformers import AutoConfig, AutoTokenizer
 from optimum.intel.openvino import OVModelForCausalLM
 import openvino as ov
 
+# set global variable
 if "activity" not in st.session_state:
     st.session_state.activity = ""
 
+# set OpenVINO config
 ov_config = {"PERFORMANCE_HINT": "LATENCY", "NUM_STREAMS": "1", "CACHE_DIR": ""}
 
 st.set_page_config(page_title="Rancangan Pengajaran Harian")
-
 st.title("Rancangan Pengajaran Harian")
 
 year = st.selectbox("Form", ("Form 4", "Form 5"))
@@ -28,7 +29,7 @@ if generate:
     Based on {subject} subject, {chapter} and the objective of the class is {objective},
     Generate an activity suitable for the subject above for students to better understand the chapter, while pairing it with {material}, and the activity level should be {focus}.
     '''
-
+    # Perform LLM inferencing using quantized OpenVINO model
     model_dir = "/home/user/openvino_notebooks/notebooks/llm-chatbot/llama-2-chat-7b/INT8_compressed_weights"
     tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
 
@@ -45,5 +46,6 @@ if generate:
     answer = ov_model.generate(**input_tokens, max_new_tokens=250)
     
     st.session_state.activity = tok.batch_decode(answer, skip_special_tokens=True)[0]
-    
+
+    # Once inferencing is completed, switch to the next page.
     st.switch_page("pages/2_Activity.py")
